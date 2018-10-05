@@ -28,7 +28,13 @@ public class ScannerService
 
     public static String getString()
     {
+        return getString("Proszę wpisać tekst: ");
+    }
+
+    public static String getString(String promptMsg)
+    {
         Scanner scan = new Scanner(System.in);
+        System.out.print(promptMsg);
         return scan.nextLine();
     }
 }
