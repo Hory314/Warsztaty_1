@@ -25,4 +25,10 @@ public class ScannerService
     {
         return getInt("Proszę podać liczbę całkowitą: ");
     }
+
+    public static String getString()
+    {
+        Scanner scan = new Scanner(System.in);
+        return scan.nextLine();
+    }
 }
