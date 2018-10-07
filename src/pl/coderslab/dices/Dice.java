@@ -1,6 +1,8 @@
 package pl.coderslab.dices;
 
-import java.util.ArrayList;
+import pl.coderslab.ScannerService;
+import pl.coderslab.game1.Main;
+
 import java.util.StringTokenizer;
 
 public class Dice
@@ -10,20 +12,7 @@ public class Dice
     private int diceSize;
     private int resultMove;
 
-    public static boolean isNumeric(String str)
-    {
-        try
-        {
-            Double.parseDouble(str);
-        }
-        catch(NumberFormatException nfe)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    Dice(String diceCode)
+    Dice(String diceCode) throws Exception
     {
         this.diceCode = diceCode.isEmpty() ? "D6" : diceCode.toUpperCase(); // jak puste, to domyslnie 1 rzut normalna kostką, jak nie to kod przekazany od usera (do duzej czcionki w razie W)
         this.resolveCode();
@@ -31,68 +20,129 @@ public class Dice
 
     Dice()
     {
-        this(""); // wywołuję inny  konstruktor tej klasy (ten ze stringiem w paramatrze)
+        this.throwsNumber = 1;
+        this.diceSize = 6;
+        this.resultMove = 0;
+        this.diceCode = "D6";
     }
 
     public int getNextThrow()
     {
-        return 0;
+        int result = 0;
+        int simpleThrow = 0;
+        for(int i = 0; i < this.throwsNumber; i++)
+        {
+            simpleThrow = Main.generateInt(1, this.diceSize); // jeden rzut od 1 do rozmiar kostki i dopisuje do wyniku
+            // ScannerService.print(simpleThrow + "+", "blue");
+            ScannerService.print(simpleThrow + ((i + 1 == this.throwsNumber) ? ("") : ("+")), "blue");
+            result += simpleThrow;
+        }
+        ScannerService.print(((this.resultMove >= 0) ? (" (+") : (" (")) + this.resultMove + ")", "blue");
+        result += this.resultMove;
+        return result;
     }
 
-    private void resolveCode()
+    private void resolveCode() throws Exception
     {
         //        2D10+10 – 2 rzuty D10, do wyniku dodaj 10,
         //        D6 – zwykły rzut kostką sześcienną,
         //        2D3 – rzut dwiema kostkami trójściennymi,
         //        D12-1 – rzut kością D12, od wyniku odejmij 1.
-        ArrayList<String> charList = new ArrayList<>();
-
-        StringTokenizer st = new StringTokenizer(this.diceCode, "D", true);
-
+        StringTokenizer st = new StringTokenizer(this.diceCode, "D+-", true);
         String token = "";
 
+        this.diceSize = 6;
+        this.throwsNumber = 1;
+        this.resultMove = 0;
+
+        int i = 0;
         while(st.hasMoreTokens())
         {
             token = st.nextToken();
-            System.out.println("Token: " + token);
-
-            if(token.equals("D"))
+            //System.out.println(token);
+            if(i == 0 && (token.equals("+") || token.equals("-"))) // jesli mamy tylko + lub -
             {
-                //todo continue here AND THINK
+                if(st.hasMoreTokens())
+                {
+                    try
+                    {
+                        this.resultMove = Integer.parseInt(token + st.nextToken());
+                    }
+                    catch(NumberFormatException ex)
+                    {
+                        //ScannerService.println("Niepoprawny kod!", "red");
+                        throw new Exception("Niepoprawny kod!");
+                    }
+                    break;
+                }
             }
 
 
-            if(isNumeric(token)) // jesli ten el to liczba, to wiemy ze to sa rzuty i wiemy ile ich jest
+            if(i == 0 && (! token.equals("D"))) // jesli to pierwszy przebieg i pierwszy token to nie jest D
             {
-                this.throwsNumber = Integer.parseInt(token);
-                System.out.println("this.throwsNumber: " + this.throwsNumber);
+                //i++;
+                try
+                {
+                    this.throwsNumber = Integer.parseInt(token);    // czyli mamy liczbe rzutów
+                }
+                catch(NumberFormatException ex)
+                {
+                    //ScannerService.println("Niepoprawny kod.", "red");
+                    throw new Exception("Niepoprawny kod!");//== break;
+                    //break;
+                }
+            }
+            else if(token.equals("D")) // jak wystąpi D, to jedziemy dalej z tokenizerem
+            {
+                if(st.hasMoreTokens()) // sprawdzamy czy jest nastepy token po D
+                {
+                    token = st.nextToken(); // size kostki lub + -
+                    try
+                    {
+                        this.diceSize = Integer.parseInt(token); // jesli uda sie parsowac to jest to size kostki...
+                        if(this.diceSize < 1)
+                        {
+                            throw new Exception("Niepoprawny kod!");// size kostki musi byc >=1
+                        }
+                    }
+                    catch(NumberFormatException ex) // ...jesli nie to jest to znak
+                    {
+                        checkModifier(st, token);
+                    }
+                }
+            }
+            else
+            {
+                checkModifier(st, token);
+            }
+            i++;
+        }
+        //System.out.println("***rzuty: " + this.throwsNumber + "\n***size: " + this.diceSize + "\n***przesuniecie: " + this.resultMove);
+        ScannerService.print(this.throwsNumber + " rzut(y) kostką " + this.diceSize + "-ścienną, przesunięcie o " + this.resultMove + "\n", "yellow");
+    }
 
+    private void checkModifier(StringTokenizer st, String token) throws Exception
+    {
+        try
+        {
+            if(token.equals("+") && st.hasMoreTokens())
+            {
+                this.resultMove = Integer.parseInt(st.nextToken()); // plusowy move
+            }
+            else if(token.equals("-") && st.hasMoreTokens())
+            {
+                this.resultMove = Integer.parseInt("-" + st.nextToken()); // minusowy move
+            }
+            else
+            {
+                //ScannerService.println("Niepoprawny kod.", "red");
+                throw new Exception("Niepoprawny kod!");
             }
         }
-
-/*
-        while(st.hasMoreTokens())
+        catch(NumberFormatException ex2)
         {
-            //            System.out.println(st.nextToken());
-             token = st.nextToken();
-            if(token.matches("\\d"))
-            {
-                this.throwsNumber = Integer.parseInt(token);
-
-            }
-        }*/
-
-
-        //        for(int i = 0; i < this.diceCode.length(); i++)
-        //        {
-        //            charList.add(Character.toString(this.diceCode.charAt(i)));
-        //        }
-        //
-        //        for(String el : charList)
-        //        {
-        //            if()
-        //        }
-
-
+            // ScannerService.println("Niepoprawny kod.", "red");
+            throw new Exception("Niepoprawny kod!");
+        }
     }
 }

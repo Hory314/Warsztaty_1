@@ -7,29 +7,33 @@ public class Main
 {
     public static void main(String[] args)
     {
+        Dice dice = new Dice(); // tworzymy pusta kostke (czyli domyslnie stworzy 1 rzut szczecienną)
 
         while(true)
         {
-            String diceCode = ScannerService.getString("Kod kostki: ");
-
-            if(diceCode.trim().equals("quit") || diceCode.trim().equals("exit")) // kończymy zabawe gdy user wpisze quit lub exit
+            try
             {
-                break; // wyjscie z petli i koniec
+                String diceCode = ScannerService.getString("Podaj kod kostki: ");
+
+
+                if(diceCode.trim().equals("quit") || diceCode.trim().equals("exit")) // kończymy zabawe gdy user wpisze quit lub exit
+                {
+                    break; // wyjscie z petli i koniec
+                }
+                else if(diceCode.trim().equals("")) // jak jest pusty to powtarzam ostatni rzut(y) utworzonej juz kostki
+                {
+                    ScannerService.print("\nWyrzucono: " + dice.getNextThrow() + "\n", "blue"); // rzucam tą samą kostką
+                }
+                else
+                {
+                    dice = new Dice(diceCode);
+                    ScannerService.print("\nWyrzucono: " + dice.getNextThrow() + "\n", "blue");
+                }
             }
-            //System.out.println(diceCode);
-            Dice dice = new Dice(diceCode);
-
-
-            //System.out.println(result);
+            catch(Exception e)
+            {
+                ScannerService.print(e.getMessage() + "\n", "red");
+            }
         }
     }
-
-    /*private static int Dice(String diceCode)
-    {
-        resolveDiceCode(diceCode)
-
-        //todo continue here
-
-        return 0;
-    }*/
 }
